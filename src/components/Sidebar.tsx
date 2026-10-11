@@ -1,4 +1,4 @@
-import { Mic, Compass, LayoutDashboard, Users, FileText, CalendarHeart, Lightbulb, Share2, BarChart3, Sparkles } from 'lucide-react';
+import { Mic, Compass, LayoutDashboard, Users, FileText, CalendarHeart, Lightbulb, Share2, BarChart3 } from 'lucide-react';
 
 export type ViewKey = 'dashboard' | 'agents' | 'content' | 'friday' | 'topics' | 'social' | 'analytics' | 'voice';
 
@@ -31,15 +31,6 @@ export function Sidebar({ current, onNavigate }: SidebarProps) {
           width="2048"
           height="1056"
         />
-      </div>
-
-      {/* Dr. Name */}
-      <div className="px-6 py-4 border-b border-navy-800/60">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-gold-400" />
-          <p className="text-sm font-medium text-gold-200">د. علي العتيبي</p>
-        </div>
-        <p className="text-xs text-navy-400 mt-1">مستشار وخبير في الفكر الاستراتيجي</p>
       </div>
 
       {/* Navigation */}

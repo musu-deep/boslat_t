@@ -13,7 +13,6 @@ function App() {
   const [view, setView] = useState<ViewKey>('dashboard');
   const [contentRequest, setContentRequest] = useState<{ token: number; taskId?: string; create?: boolean } | undefined>();
   function navigate(next: ViewKey, taskId?: string) { setView(next); if (next === 'content') setContentRequest({ token: Date.now(), taskId }); }
-  function assign() { setView('content'); setContentRequest({ token: Date.now(), create: true }); }
 
   const titles: Record<ViewKey, string> = {
     dashboard: 'لوحة التحكم',
@@ -30,7 +29,7 @@ function App() {
       <Sidebar current={view} onNavigate={setView} />
 
       <main className="flex-1 overflow-auto">
-        <PlatformHeader title={titles[view]} view={view} onNavigate={navigate} onAssign={assign} />
+        <PlatformHeader title={titles[view]} view={view} onNavigate={navigate} />
 
         {/* Content */}
         <div className="p-8 max-w-7xl mx-auto">

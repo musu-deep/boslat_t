@@ -1,3 +1,4 @@
+import { VoiceView } from '@/views/VoiceView';
 import { PlatformHeader } from '@/components/PlatformHeader';
 import { useState } from 'react';
 import { Sidebar, type ViewKey } from '@/components/Sidebar';
@@ -11,7 +12,7 @@ import { AnalyticsView } from '@/views/AnalyticsView';
 
 function App() {
   const [view, setView] = useState<ViewKey>('dashboard');
-  const [contentRequest, setContentRequest] = useState<{ token: number; taskId?: string; create?: boolean } | undefined>();
+  const [contentRequest, setContentRequest] = useState<{ token: number; taskId?: string; create?: boolean; title?: string; brief?: string } | undefined>();
   function navigate(next: ViewKey, taskId?: string) { setView(next); if (next === 'content') setContentRequest({ token: Date.now(), taskId }); }
 
   const titles: Record<ViewKey, string> = {
@@ -22,6 +23,7 @@ function App() {
     topics: 'مقترحات الوكلاء',
     social: 'سوشال مونتيور',
     analytics: 'الأداء والتقارير',
+    voice: 'وكيل الأوامر الصوتية',
   };
 
   return (
@@ -34,6 +36,7 @@ function App() {
         {/* Content */}
         <div className="p-8 max-w-7xl mx-auto">
           {view === 'dashboard' && <Dashboard onNavigate={setView} />}
+          {view === 'voice' && <VoiceView onNavigate={navigate} onPrepare={(title,brief) => { setContentRequest({token: Date.now(),create:true,title,brief}); setView('content'); }} />}
           {view === 'agents' && <AgentsView />}
           {view === 'content' && <ContentView request={contentRequest} />}
           {view === 'friday' && <FridayView />}

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Search, Bell, ChevronDown, Database, Pause, Play, X, UserRound } from 'lucide-react';
+import { Mic, Search, Bell, ChevronDown, Database, Pause, Play, X, UserRound } from 'lucide-react';
 import { fetchTasks, fetchContent, fetchAgents, fetchTopics } from '@/lib/api';
 import { fetchSignals } from '@/lib/monitor';
 import { isDemoMode } from '@/lib/supabase';
@@ -77,7 +77,7 @@ export function PlatformHeader({ view, onNavigate }: Props) {
     <div className="flex items-center gap-3 px-6 py-3">
       <div className="flex w-full min-w-0 items-center gap-2">
         <div className="relative">
-          <label className="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200 px-3 py-2"><Search size={16} className="text-slate-400"/><input aria-label="البحث في المنصة" placeholder="ابحث في المنصة…" className="bg-transparent outline-none text-sm w-28 xl:w-40 text-navy-800" value={query} onFocus={() => setPanel('search')} onChange={e => { setQuery(e.target.value); setPanel('search'); }}/></label>
+          <label className="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200 px-3 py-2"><Search size={16} className="text-slate-400"/><button type="button" aria-label="وكيل الأوامر الصوتية" title="وكيل الأوامر الصوتية" onClick={() => go('voice')} className="text-gold-600 hover:text-navy-800"><Mic size={16}/></button><input aria-label="البحث في المنصة" placeholder="ابحث في المنصة…" className="bg-transparent outline-none text-sm w-28 xl:w-40 text-navy-800" value={query} onFocus={() => setPanel('search')} onChange={e => { setQuery(e.target.value); setPanel('search'); }}/></label>
           {panel === 'search' && <div className="absolute left-0 top-full mt-2 w-80 max-w-[85vw] bg-white rounded-2xl border border-slate-200 shadow-xl p-2 max-h-80 overflow-auto" role="region" aria-label="نتائج البحث">{!needle ? <p className="p-3 text-sm text-slate-500">ابحث عن مهمة أو مخرج أو مقترح أو وكيل أو إشارة.</p> : !results.length ? <p className="p-3 text-sm text-slate-500">لا توجد نتائج مطابقة.</p> : results.map(r => <button key={r.id} onClick={() => go(r.view, r.taskId)} className="w-full text-right p-3 rounded-xl hover:bg-slate-50"><span className="text-xs text-gold-700 block">{r.kind}</span><span className="text-sm text-navy-800">{r.label}</span></button>)}</div>}
         </div>
     <div className="flex min-w-0 flex-1 items-center gap-2 px-3 text-xs" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => setHovered(true)} onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setHovered(false); }}>

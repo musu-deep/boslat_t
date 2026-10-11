@@ -1,6 +1,6 @@
-import { Compass, LayoutDashboard, Users, FileText, CalendarHeart, Lightbulb, Share2, BarChart3, Sparkles } from 'lucide-react';
+import { Mic, Compass, LayoutDashboard, Users, FileText, CalendarHeart, Lightbulb, Share2, BarChart3, Sparkles } from 'lucide-react';
 
-export type ViewKey = 'dashboard' | 'agents' | 'content' | 'friday' | 'topics' | 'social' | 'analytics';
+export type ViewKey = 'dashboard' | 'agents' | 'content' | 'friday' | 'topics' | 'social' | 'analytics' | 'voice';
 
 interface SidebarProps {
   current: ViewKey;
@@ -9,6 +9,7 @@ interface SidebarProps {
 
 const navItems: { key: ViewKey; label: string; icon: typeof Compass }[] = [
   { key: 'dashboard', label: 'لوحة التحكم', icon: LayoutDashboard },
+  { key: 'voice', label: 'وكيل الأوامر الصوتية', icon: Mic },
   { key: 'agents', label: 'الوكلاء', icon: Users },
   { key: 'content', label: 'مهام إعداد المحتوى', icon: FileText },
   { key: 'friday', label: 'غروب الجمعة', icon: CalendarHeart },

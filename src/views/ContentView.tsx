@@ -5,7 +5,7 @@ import { fetchTasks, fetchContent, fetchAgents, createTask, createContent, updat
 import { formatDate } from '@/lib/utils';
 import type { Task, Content, Agent } from '@/types';
 const blank={title:'',brief:'',agent:'',due:''};
-export function ContentView({request}: {request?: {token:number;taskId?:string;create?:boolean}}){
+export function ContentView({request}: {request?: {token:number;taskId?:string;create?:boolean;title?:string;brief?:string}}){
  const [tasks,setTasks]=useState<Task[]>([]),[outputs,setOutputs]=useState<Content[]>([]),[agents,setAgents]=useState<Agent[]>([]);
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const [show,setShow]=useState(false),[form,setForm]=useState(blank),[selected,setSelected]=useState<Task|null>(null),[body,setBody]=useState(''),[filter,setFilter]=useState('all');
@@ -13,7 +13,7 @@ export function ContentView({request}: {request?: {token:number;taskId?:string;c
  useEffect(()=>{void load();},[]);
  useEffect(()=>{
   if(loading||!request)return;
-  if(request.create){setForm({...blank,agent:agents.find(a=>a.role==='إعداد المحتوى')?.id??''});setError('');setShow(true);}
+  if(request.create){setForm({...blank,title:request.title??'',brief:request.brief??'',agent:agents.find(a=>a.role==='إعداد المحتوى')?.id??''});setError('');setShow(true);}
   else if(request.taskId){const task=tasks.find(t=>t.id===request.taskId);if(task){setSelected(task);setBody(outputs.find(c=>c.id===task.content_id)?.body??'');setError('');}}
  },[loading,request?.token]);
 

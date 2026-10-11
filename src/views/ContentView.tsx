@@ -1,197 +1,41 @@
 import { useEffect, useState } from 'react';
-import { Plus, Search, Trash2, Edit3, FileText, Eye, Filter } from 'lucide-react';
+import { Plus, FileText, Play, Eye, Download } from 'lucide-react';
 import { Card, Badge, Button, Modal, Input, Spinner, EmptyState } from '@/components/ui';
-import { fetchContent, fetchAgents, createContent, updateContent, deleteContent } from '@/lib/api';
-import { statusLabels, statusColors, formatDate } from '@/lib/utils';
-import type { Content, Agent } from '@/types';
-
-export function ContentView() {
-  const [content, setContent] = useState<Content[]>([]);
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState<Content | null>(null);
-  const [viewing, setViewing] = useState<Content | null>(null);
-
-  const [form, setForm] = useState({
-    title: '', body: '', type: 'article', status: 'draft', platform: 'twitter', tags: '',
-  });
-
-  useEffect(() => { loadData(); }, []);
-
-  async function loadData() {
-    try {
-      const [c, a] = await Promise.all([fetchContent(), fetchAgents()]);
-      setContent(c); setAgents(a);
-    } catch (err) { console.error('Content load error:', err); }
-    finally { setLoading(false); }
-  }
-
-  function openCreate() {
-    setEditing(null);
-    setForm({ title: '', body: '', type: 'article', status: 'draft', platform: 'twitter', tags: '' });
-    setShowModal(true);
-  }
-
-  function openEdit(item: Content) {
-    setEditing(item);
-    setForm({ title: item.title, body: item.body ?? '', type: item.type, status: item.status, platform: item.platform ?? 'twitter', tags: (item.tags ?? []).join(', ') });
-    setShowModal(true);
-  }
-
-  async function handleSave() {
-    if (!form.title.trim()) return;
-    const tags = form.tags.split(',').map((t) => t.trim()).filter(Boolean);
-    const data = { title: form.title, body: form.body, type: form.type, status: form.status, platform: form.platform, tags };
-    try {
-      if (editing) { await updateContent(editing.id, data); } else { await createContent(data); }
-      setShowModal(false); await loadData();
-    } catch (err) { console.error('Save content error:', err); }
-  }
-
-  async function handleDelete(id: string) {
-    try { await deleteContent(id); setContent(content.filter((c) => c.id !== id)); }
-    catch (err) { console.error('Delete content error:', err); }
-  }
-
-  const filtered = content.filter((c) => {
-    const matchSearch = c.title.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = filterStatus === 'all' || c.status === filterStatus;
-    return matchSearch && matchStatus;
-  });
-
-  const agentMap = new Map(agents.map((a) => [a.id, a]));
-
-  if (loading) {
-    return (<div className="flex items-center justify-center h-96"><Spinner size="lg" /></div>);
-  }
-
-  return (
-    <div className="space-y-6 animate-fadeIn">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-navy-800 font-display">إدارة المحتوى</h2>
-          <p className="text-sm text-slate-400 mt-1">إضاءات استراتيجية - مقالات ومنشورات</p>
-        </div>
-        <Button variant="gold" onClick={openCreate}><Plus className="w-4 h-4" /> محتوى جديد</Button>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="بحث في المحتوى..."
-            className="w-full pr-10 pl-4 py-2.5 rounded-xl border border-slate-200 focus:border-gold-400 focus:ring-2 focus:ring-gold-100 outline-none transition-all text-sm" />
-        </div>
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-slate-400" />
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 focus:border-gold-400 outline-none text-sm bg-white">
-            <option value="all">كل الحالات</option>
-            <option value="draft">مسودة</option>
-            <option value="review">قيد المراجعة</option>
-            <option value="scheduled">مجدول</option>
-            <option value="published">منشور</option>
-          </select>
-        </div>
-      </div>
-
-      {filtered.length === 0 ? (
-        <EmptyState icon={<FileText className="w-16 h-16" />} title="لا يوجد محتوى" description="ابدأ بإنشاء أول قطعة محتوى"
-          action={<Button variant="gold" onClick={openCreate}><Plus className="w-4 h-4" /> إنشاء محتوى</Button>} />
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filtered.map((item) => {
-            const agent = item.author_agent_id ? agentMap.get(item.author_agent_id) : null;
-            return (
-              <Card key={item.id} className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-navy-800 font-display mb-1 truncate">{item.title}</h3>
-                    <p className="text-sm text-slate-400 line-clamp-2">{item.body ?? 'لا يوجد محتوى'}</p>
-                  </div>
-                  <Badge label={statusLabels[item.status] ?? item.status} colorClass={statusColors[item.status] ?? ''} />
-                </div>
-                <div className="flex items-center gap-2 mb-3 flex-wrap">
-                  <Badge label={item.type === 'article' ? 'مقال' : item.type === 'post' ? 'منشور' : item.type} colorClass="bg-navy-50 text-navy-600" />
-                  {item.platform && <Badge label={item.platform} colorClass="bg-navy-50 text-navy-600" />}
-                  {item.tags && item.tags.length > 0 && item.tags.slice(0, 2).map((tag, i) => (
-                    <Badge key={i} label={`#${tag}`} colorClass="bg-gold-50 text-gold-700" />
-                  ))}
-                </div>
-                <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                  <div className="flex items-center gap-2 text-xs text-slate-400">
-                    {agent && (
-                      <span className="flex items-center gap-1">
-                        <span className="w-5 h-5 rounded-lg flex items-center justify-center text-white text-xs font-bold"
-                          style={{ backgroundColor: agent.avatar_color === '#c5a55a' ? '#c5a55a' : '#1a3a5c' }}>
-                          {agent.name.charAt(0)}
-                        </span>
-                        {agent.name}
-                      </span>
-                    )}
-                    <span>•</span>
-                    <span>{formatDate(item.created_at)}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => setViewing(item)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-navy-600 transition-colors"><Eye className="w-4 h-4" /></button>
-                    <button onClick={() => openEdit(item)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-navy-600 transition-colors"><Edit3 className="w-4 h-4" /></button>
-                    <button onClick={() => handleDelete(item.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'تعديل المحتوى' : 'محتوى جديد'} size="lg">
-        <div className="space-y-4">
-          <Input label="العنوان" value={form.title} onChange={(v) => setForm({ ...form, title: v })} placeholder="عنوان المحتوى" />
-          <Input label="المحتوى" value={form.body} onChange={(v) => setForm({ ...form, body: v })} placeholder="نص المحتوى" type="textarea" rows={6} />
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="النوع" value={form.type} onChange={(v) => setForm({ ...form, type: v })} type="select" options={[
-              { value: 'article', label: 'مقال' }, { value: 'post', label: 'منشور' }, { value: 'social_post', label: 'منشور سوشال' },
-            ]} />
-            <Input label="الحالة" value={form.status} onChange={(v) => setForm({ ...form, status: v })} type="select" options={[
-              { value: 'draft', label: 'مسودة' }, { value: 'review', label: 'قيد المراجعة' }, { value: 'scheduled', label: 'مجدول' }, { value: 'published', label: 'منشور' },
-            ]} />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="المنصة" value={form.platform} onChange={(v) => setForm({ ...form, platform: v })} type="select" options={[
-              { value: 'twitter', label: 'تويتر' }, { value: 'instagram', label: 'إنستغرام' }, { value: 'facebook', label: 'فيسبوك' }, { value: 'telegram', label: 'تيليغرام' }, { value: 'whatsapp', label: 'واتساب' },
-            ]} />
-            <Input label="الوسوم (افصل بفاصلة)" value={form.tags} onChange={(v) => setForm({ ...form, tags: v })} placeholder="تأملات، نصائح" />
-          </div>
-          <div className="flex gap-2 justify-end pt-2">
-            <Button variant="ghost" onClick={() => setShowModal(false)}>إلغاء</Button>
-            <Button variant="gold" onClick={handleSave}>{editing ? 'حفظ التغييرات' : 'إنشاء'}</Button>
-          </div>
-        </div>
-      </Modal>
-
-      {viewing && (
-        <Modal open={!!viewing} onClose={() => setViewing(null)} title={viewing.title} size="lg">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge label={statusLabels[viewing.status] ?? viewing.status} colorClass={statusColors[viewing.status] ?? ''} />
-              <Badge label={viewing.type} colorClass="bg-navy-50 text-navy-600" />
-              {viewing.platform && <Badge label={viewing.platform} colorClass="bg-navy-50 text-navy-600" />}
-            </div>
-            <div className="bg-slate-50 rounded-xl p-4 max-h-96 overflow-y-auto scrollbar-thin">
-              <p className="text-sm text-navy-700 whitespace-pre-wrap leading-relaxed">{viewing.body ?? 'لا يوجد محتوى'}</p>
-            </div>
-            {viewing.tags && viewing.tags.length > 0 && (
-              <div className="flex items-center gap-2 flex-wrap">
-                {viewing.tags.map((tag, i) => (<Badge key={i} label={`#${tag}`} colorClass="bg-gold-50 text-gold-700" />))}
-              </div>
-            )}
-            <div className="flex justify-end"><Button variant="ghost" onClick={() => setViewing(null)}>إغلاق</Button></div>
-          </div>
-        </Modal>
-      )}
-    </div>
-  );
+import { fetchTasks, fetchContent, fetchAgents, createTask, createContent, updateTask, updateContent, approveTaskOutput, deleteContent } from '@/lib/api';
+import { formatDate } from '@/lib/utils';
+import type { Task, Content, Agent } from '@/types';
+const blank={title:'',brief:'',agent:'',due:''};
+export function ContentView(){
+ const [tasks,setTasks]=useState<Task[]>([]),[outputs,setOutputs]=useState<Content[]>([]),[agents,setAgents]=useState<Agent[]>([]);
+ const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const [show,setShow]=useState(false),[form,setForm]=useState(blank),[selected,setSelected]=useState<Task|null>(null),[body,setBody]=useState(''),[filter,setFilter]=useState('all');
+ async function load(){try{const [t,c,a]=await Promise.all([fetchTasks(),fetchContent(),fetchAgents()]);setTasks(t);setOutputs(c);setAgents(a);}catch{setError('تعذر تحميل المهام');}finally{setLoading(false);}}
+ useEffect(()=>{void load();},[]);
+ const outputFor=(task:Task)=>outputs.find(c=>c.id===task.content_id);
+ const stage=(task:Task)=>task.status==='cancelled'?'cancelled':outputFor(task)?.status==='approved'?'approved':outputFor(task)?.status==='review'?'review':task.status==='completed'?'completed':task.status;
+ const labels:Record<string,string>={pending:'بانتظار التنفيذ',in_progress:'قيد الإعداد',review:'مراجعة المخرج',approved:'جاهز للتسليم',completed:'مكتمل',cancelled:'ملغى'};
+ async function create(){if(!form.title.trim()||!form.brief.trim()||!form.agent){setError('أكمل عنوان التكليف والموجز والوكيل المسؤول');return;}setBusy(true);setError('');let draft:Content|null=null;try{draft=await createContent({title:form.title.trim(),body:'',type:'article',status:'draft',author_agent_id:form.agent,platform:null,tags:[]});await createTask({title:form.title.trim(),description:form.brief.trim(),agent_id:form.agent,status:'pending',priority:'medium',due_date:form.due?new Date(form.due).toISOString():null,content_id:draft.id});setShow(false);await load();}catch{if(draft)await deleteContent(draft.id).catch(()=>{});setError('تعذر إنشاء التكليف');}finally{setBusy(false);}}
+ async function start(task:Task){setBusy(true);setError('');try{await updateTask(task.id,{status:'in_progress'});await load();}catch{setError('تعذر بدء المهمة');}finally{setBusy(false);}}
+ function open(task:Task){setSelected(task);setBody(outputFor(task)?.body??'');setError('');}
+ async function saveOutput(review:boolean){if(!selected)return;if(review&&!body.trim()){setError('أدخل المخرج قبل إرساله للمراجعة');return;}setBusy(true);setError('');try{if(selected.content_id)await updateContent(selected.content_id,{body,status:review?'review':'draft'});else{const draft=await createContent({title:selected.title,body,type:'article',status:review?'review':'draft',author_agent_id:selected.agent_id,platform:null});await updateTask(selected.id,{content_id:draft.id});}await updateTask(selected.id,{status:'in_progress',completed_at:null});setSelected(null);await load();}catch{setError('تعذر حفظ المخرج');}finally{setBusy(false);}}
+ async function approve(){if(!selected)return;setBusy(true);setError('');try{await approveTaskOutput(selected.id);setSelected(null);await load();}catch(e){setError(e instanceof Error?e.message:'تعذر اعتماد المخرج');}finally{setBusy(false);}}
+ async function returnToAgent(){if(!selected?.content_id)return;setBusy(true);setError('');try{await updateContent(selected.content_id,{status:'draft'});await updateTask(selected.id,{status:'in_progress'});setSelected(null);await load();}catch{setError('تعذر إعادة المخرج للوكيل');}finally{setBusy(false);}}
+ function download(task:Task){const output=outputFor(task);if(output?.status!=='approved')return;const blob=new Blob([`${task.title}\n\n${output.body??''}`],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`${task.title.replace(/[\\/:*?"<>|]/g,'-')}.txt`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+ const current=selected?outputFor(selected):undefined;
+ if(loading)return <div className="flex justify-center py-24"><Spinner size="lg"/></div>;
+ return <div className="space-y-6">
+  <div className="flex justify-between gap-4"><div><h2 className="text-2xl font-bold text-navy-800 font-display">مهام إعداد المحتوى</h2><p className="text-sm text-slate-500 mt-2">تكليف الوكيل، متابعة التنفيذ، ثم مراجعة المخرج واعتماده للتسليم للمدونة.</p></div><Button variant="gold" onClick={()=>{setForm({...blank,agent:agents.find(a=>a.role==='إعداد المحتوى')?.id??''});setError('');setShow(true);}}><Plus size={16}/>تكليف جديد</Button></div>
+  <p className="rounded-xl bg-gold-50 border border-gold-200 p-4 text-sm text-navy-700">المخرجات هنا للمراجعة والتسليم. تنزيل الملف لا ينشره على المدونة، وتنفيذ الوكلاء ما زال تجريبيًا.</p>
+  {error&&<p role="alert" className="text-red-700 text-sm">{error}</p>}
+  <div className="flex gap-2 flex-wrap" role="group" aria-label="تصفية المهام">{[['all','جميع المهام'],['pending','بانتظار التنفيذ'],['in_progress','قيد الإعداد'],['review','للمراجعة'],['approved','جاهز للتسليم']].map(([key,label])=><Button key={key} variant={filter===key?'primary':'secondary'} size="sm" onClick={()=>setFilter(key)}>{label}</Button>)}</div>
+  {!tasks.length?<EmptyState title="لا توجد مهام" description="اعتمد مقترحًا وكلف وكيلًا به، أو أنشئ تكليفًا مباشرًا" icon={<FileText size={48}/>}/>:<div className="grid md:grid-cols-2 gap-4">{tasks.filter(t=>filter==='all'||stage(t)===filter).map(task=><Card key={task.id} className="p-5 space-y-4">
+   <div className="flex justify-between gap-3"><h3 className="font-bold text-navy-800">{task.title}</h3><Badge label={labels[stage(task)]??stage(task)}/></div>
+   <p className="text-sm text-slate-600 whitespace-pre-wrap">{task.description||'لم يُحدد موجز التكليف'}</p>
+   <p className="text-xs text-slate-500">الوكيل المسؤول: {agents.find(a=>a.id===task.agent_id)?.name??'غير محدد'}</p>
+   <p className="text-xs text-slate-500">موعد التسليم: {formatDate(task.due_date)}</p>
+   <div className="flex gap-2 flex-wrap">{stage(task)==='pending'&&<Button size="sm" disabled={busy} onClick={()=>start(task)}><Play size={14}/>بدء المهمة</Button>}{task.status!=='cancelled'&&<Button size="sm" variant="secondary" onClick={()=>open(task)}><Eye size={14}/>{stage(task)==='review'?'مراجعة المخرج':stage(task)==='approved'?'عرض المخرج':'إعداد المخرج'}</Button>}{stage(task)==='approved'&&<Button size="sm" variant="gold" onClick={()=>download(task)}><Download size={14}/>تنزيل المخرج للمدونة</Button>}</div>
+  </Card>)}</div>}
+  <Modal open={show} onClose={()=>setShow(false)} title="تكليف وكيل بإعداد المحتوى" size="lg"><div className="space-y-4"><Input label="عنوان التكليف" value={form.title} onChange={title=>setForm({...form,title})}/><Input label="موجز التكليف — الهدف والجمهور والمطلوب" value={form.brief} onChange={brief=>setForm({...form,brief})} type="textarea" rows={5}/><Input label="الوكيل المسؤول" value={form.agent} onChange={agent=>setForm({...form,agent})} type="select" options={[{value:'',label:'اختر الوكيل'},...agents.map(a=>({value:a.id,label:a.name}))]}/><Input label="موعد التسليم" value={form.due} onChange={due=>setForm({...form,due})} type="date"/>{error&&<p role="alert" className="text-red-700 text-sm">{error}</p>}<Button disabled={busy} variant="gold" onClick={create}>إنشاء التكليف</Button></div></Modal>
+  <Modal open={!!selected} onClose={()=>setSelected(null)} title={selected?.title??'مخرج المهمة'} size="lg"><div className="space-y-4"><div className="rounded-xl bg-slate-50 p-4 text-sm whitespace-pre-wrap text-slate-600">{selected?.description}</div>{current?.status==='approved'||current?.status==='review'?<div className="rounded-xl border border-slate-200 p-4 whitespace-pre-wrap text-navy-700 leading-relaxed">{current?.body}</div>:<Input label="مخرج الوكيل" value={body} onChange={setBody} type="textarea" rows={10}/>}<p className="text-xs text-slate-500">في النسخة التجريبية يمكن إدخال المخرج يدويًا لاختبار المراجعة والاعتماد.</p>{error&&<p role="alert" className="text-red-700 text-sm">{error}</p>}<div className="flex gap-2 flex-wrap">{current?.status==='review'?<><Button disabled={busy} variant="gold" onClick={approve}>اعتماد المخرج للتسليم</Button><Button disabled={busy} variant="secondary" onClick={returnToAgent}>إعادة للوكيل للتعديل</Button></>:current?.status==='approved'?<Button variant="gold" onClick={()=>selected&&download(selected)}>تنزيل المخرج للمدونة</Button>:<><Button disabled={busy} variant="secondary" onClick={()=>saveOutput(false)}>حفظ المخرج</Button><Button disabled={busy||!body.trim()} variant="gold" onClick={()=>saveOutput(true)}>إرسال للمراجعة</Button></>}</div></div></Modal>
+ </div>;
 }

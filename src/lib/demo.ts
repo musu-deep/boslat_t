@@ -61,3 +61,26 @@ export function localDelete<K extends keyof Tables>(table: K, id: string): void 
  const db = load(); const index = db[table].findIndex(row => row.id === id);
  if (index >= 0) db[table].splice(index,1); save(db);
 }
+
+
+export function localAssignProposal(topicId: string, agentId: string): Task {
+ const db = load();
+ const topic = db.topics.find(row => row.id === topicId);
+ if (!topic || !db.agents.some(row => row.id === agentId)) throw new Error('المقترح أو الوكيل غير موجود');
+ const output = db.content.find(row => row.tags?.includes(`proposal:${topicId}`));
+ const existing = output && db.tasks.find(row => row.content_id === output.id);
+ if (existing) return existing;
+ if (topic.status !== 'approved') throw new Error('اعتمد المقترح قبل التكليف');
+ const now = new Date().toISOString();
+ const draft: Content = {id:crypto.randomUUID(),title:topic.title,body:'',type:'article',status:'draft',author_agent_id:agentId,platform:null,tags:[`proposal:${topicId}`],scheduled_at:null,published_at:null,engagement_metrics:{},created_at:now};
+ const task: Task = {id:crypto.randomUUID(),title:topic.title,description:[topic.description,topic.inspiration ? `سبب المقترح: ${topic.inspiration}` : null].filter(Boolean).join('\n'),agent_id:agentId,status:'pending',priority:topic.priority>=8?'high':'medium',due_date:null,content_id:draft.id,created_at:now,completed_at:null};
+ db.content.push(draft);db.tasks.push(task);topic.status='in_progress';save(db);return task;
+}
+export function localApproveOutput(taskId: string): void {
+ const db=load();const task=db.tasks.find(row=>row.id===taskId);
+ const output=db.content.find(row=>row.id===task?.content_id);
+ if (!task || !output || output.status!=='review' || !output.body?.trim()) throw new Error('أرسل مخرج المهمة للمراجعة قبل اعتماده');
+ output.status='approved';task.status='completed';task.completed_at=new Date().toISOString();
+ const tag=output.tags?.find(tag=>tag.startsWith('proposal:'));
+ const topic=tag && db.topics.find(row=>row.id===tag.slice(9));if(topic)topic.status='completed';save(db);
+}

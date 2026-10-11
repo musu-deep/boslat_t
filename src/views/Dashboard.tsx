@@ -192,9 +192,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <h3 className="font-bold text-navy-800 font-display mb-4">إجراءات سريعة</h3>
             <div className="space-y-2">
               <QuickAction icon={CalendarHeart} label="تجهيز غروب الجمعة" color="bg-gold-50 text-gold-700" onClick={() => onNavigate('friday')} />
-              <QuickAction icon={FileText} label="إنشاء محتوى جديد" color="bg-navy-50 text-navy-600" onClick={() => onNavigate('content')} />
+              <QuickAction icon={FileText} label="تكليف جديد جديد" color="bg-navy-50 text-navy-600" onClick={() => onNavigate('content')} />
               <QuickAction icon={Share2} label="جدولة منشور سوشال" color="bg-navy-50 text-navy-600" onClick={() => onNavigate('social')} />
-              <QuickAction icon={Zap} label="ابتكار موضوع جديد" color="bg-gold-50 text-gold-700" onClick={() => onNavigate('topics')} />
+              <QuickAction icon={Zap} label="مقترح جديد جديد" color="bg-gold-50 text-gold-700" onClick={() => onNavigate('topics')} />
             </div>
           </Card>
 
@@ -234,3 +234,4 @@ function QuickAction({ icon: Icon, label, color, onClick }: { icon: typeof Users
     </button>
   );
 }
+

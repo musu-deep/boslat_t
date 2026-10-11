@@ -15,9 +15,9 @@ function App() {
   const titles: Record<ViewKey, string> = {
     dashboard: 'لوحة التحكم',
     agents: 'الوكلاء',
-    content: 'المحتوى',
+    content: 'مهام إعداد المحتوى',
     friday: 'غروب الجمعة',
-    topics: 'ابتكار المواضيع',
+    topics: 'مقترحات الوكلاء',
     social: 'السوشال ميديا',
     analytics: 'التحليلات',
   };
@@ -65,3 +65,4 @@ function App() {
 }
 
 export default App;
+

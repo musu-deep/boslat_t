@@ -10,9 +10,9 @@ interface SidebarProps {
 const navItems: { key: ViewKey; label: string; icon: typeof Compass }[] = [
   { key: 'dashboard', label: 'لوحة التحكم', icon: LayoutDashboard },
   { key: 'agents', label: 'الوكلاء', icon: Users },
-  { key: 'content', label: 'المحتوى', icon: FileText },
+  { key: 'content', label: 'مهام إعداد المحتوى', icon: FileText },
   { key: 'friday', label: 'غروب الجمعة', icon: CalendarHeart },
-  { key: 'topics', label: 'ابتكار المواضيع', icon: Lightbulb },
+  { key: 'topics', label: 'مقترحات الوكلاء', icon: Lightbulb },
   { key: 'social', label: 'السوشال ميديا', icon: Share2 },
   { key: 'analytics', label: 'التحليلات', icon: BarChart3 },
 ];
@@ -81,3 +81,4 @@ export function Sidebar({ current, onNavigate }: SidebarProps) {
     </aside>
   );
 }
+

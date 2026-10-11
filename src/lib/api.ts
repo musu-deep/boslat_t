@@ -1,4 +1,4 @@
-import { localRead, localCreate, localUpdate, localDelete } from './demo';
+import { localRead, localCreate, localUpdate, localDelete, localAssignProposal, localApproveOutput } from './demo';
 import { supabase } from '@/lib/supabase';
 import type { Agent, Task, Content, FridayPost, Topic, SocialPost, Analytics, Template } from '@/types';
 
@@ -159,4 +159,14 @@ export async function updateAgent(id: string, updates: Partial<Agent>): Promise<
   if (!supabase) return localUpdate('agents', id, updates);
   const { error } = await supabase.from('agents').update(updates).eq('id', id);
   if (error) throw error;
+}
+
+
+export async function assignProposal(topicId: string, agentId: string): Promise<Task> {
+ if (!supabase) return localAssignProposal(topicId, agentId);
+ throw new Error('يلزم إعداد مسار التكليف في الخدمة المتصلة قبل استخدامه');
+}
+export async function approveTaskOutput(taskId: string): Promise<void> {
+ if (!supabase) return localApproveOutput(taskId);
+ throw new Error('يلزم إعداد مسار اعتماد المخرجات في الخدمة المتصلة قبل استخدامه');
 }

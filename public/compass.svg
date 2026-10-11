@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="46" fill="#102a43" stroke="#c5a55a" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="38" fill="none" stroke="#c5a55a" stroke-width="1" stroke-opacity="0.3"/>
+  <polygon points="50,14 56,46 50,52 44,46" fill="#c5a55a"/>
+  <polygon points="50,86 56,54 50,48 44,54" fill="#486581"/>
+  <circle cx="50" cy="50" r="4" fill="#c5a55a"/>
+  <text x="50" y="76" text-anchor="middle" font-size="14" font-weight="bold" fill="#c5a55a" font-family="sans-serif">N</text>
+</svg>

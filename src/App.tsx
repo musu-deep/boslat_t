@@ -16,7 +16,7 @@ function App() {
     dashboard: 'لوحة التحكم',
     agents: 'الوكلاء',
     content: 'المحتوى',
-    friday: 'بوست الجمعة',
+    friday: 'غروب الجمعة',
     topics: 'ابتكار المواضيع',
     social: 'السوشال ميديا',
     analytics: 'التحليلات',

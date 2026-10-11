@@ -70,11 +70,11 @@ export function FridayView() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-navy-800 font-display flex items-center gap-2">
-            <CalendarHeart className="w-7 h-7 text-gold-500" /> بوست الجمعة
+            <CalendarHeart className="w-7 h-7 text-gold-500" /> غروب الجمعة
           </h2>
-          <p className="text-sm text-slate-400 mt-1">تجهيز ومراجعة بوستات الجمعة بنسق موحد</p>
+          <p className="text-sm text-slate-400 mt-1">تجهيز ومراجعة إصدارات غروب الجمعة بنسق موحد</p>
         </div>
-        <Button variant="gold" onClick={openCreate}><Plus className="w-4 h-4" /> بوست جديد</Button>
+        <Button variant="gold" onClick={openCreate}><Plus className="w-4 h-4" /> إصدار جديد</Button>
       </div>
 
       {templates.length > 0 && (
@@ -152,10 +152,10 @@ export function FridayView() {
         </div>
       )}
 
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'تعديل بوست الجمعة' : 'بوست جمعة جديد'} size="xl">
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'تعديل غروب الجمعة' : 'إصدار جديد لغروب الجمعة'} size="xl">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <Input label="العنوان" value={form.title} onChange={(v) => setForm({ ...form, title: v })} placeholder="عنوان بوست الجمعة" />
+            <Input label="العنوان" value={form.title} onChange={(v) => setForm({ ...form, title: v })} placeholder="عنوان غروب الجمعة" />
             <Input label="الموضوع الرئيسي" value={form.main_topic} onChange={(v) => setForm({ ...form, main_topic: v })} placeholder="موضوع البوست" />
           </div>
           <Input label="المحتوى (الافتتاحية والموعظة)" value={form.content} onChange={(v) => setForm({ ...form, content: v })} placeholder="اكتب محتوى البوست..." type="textarea" rows={5} />

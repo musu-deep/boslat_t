@@ -25,7 +25,7 @@ export function AgentsHero({ onNavigate, hasFridayDraft }: AgentsHeroProps) {
             <button className="agents-hero-primary" onClick={() => onNavigate('agents')}>استعراض الوكلاء <ArrowUpRight size={18} /></button>
             <button className="agents-hero-secondary" onClick={() => onNavigate('content')}>إدارة المحتوى <ArrowUpRight size={17} /></button>
           </div>
-          {hasFridayDraft && <button className="agents-hero-friday" onClick={() => onNavigate('friday')}><CalendarHeart size={16} /><span>بوست الجمعة — مراجعة المسودة</span><ArrowUpRight size={15} /></button>}
+          {hasFridayDraft && <button className="agents-hero-friday" onClick={() => onNavigate('friday')}><CalendarHeart size={16} /><span>غروب الجمعة — مراجعة المسودة</span><ArrowUpRight size={15} /></button>}
         </div>
       </div>
       <div className="agents-hero-caption" aria-hidden="true">الثبات · البساطة · العمق · بعد الأثر</div>

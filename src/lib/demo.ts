@@ -43,7 +43,7 @@ function load(): Database {
  if (updated) save(value);
  return value;
 }
-function save(db: Database): void { localStorage.setItem(storageKey, JSON.stringify(db)); }
+function save(db: Database): void { localStorage.setItem(storageKey, JSON.stringify(db)); window.dispatchEvent(new Event('alboslah:data-changed')); }
 export function localRead<K extends keyof Tables>(table: K, field: string, ascending: boolean): Tables[K][] {
  const rows = load()[table] as Tables[K][];
  return rows.sort((a,b) => {

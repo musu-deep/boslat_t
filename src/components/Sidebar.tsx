@@ -14,7 +14,7 @@ const navItems: { key: ViewKey; label: string; icon: typeof Compass }[] = [
   { key: 'friday', label: 'غروب الجمعة', icon: CalendarHeart },
   { key: 'topics', label: 'مقترحات الوكلاء', icon: Lightbulb },
   { key: 'social', label: 'سوشال مونتيور', icon: Share2 },
-  { key: 'analytics', label: 'التحليلات', icon: BarChart3 },
+  { key: 'analytics', label: 'الأداء والتقارير', icon: BarChart3 },
 ];
 
 export function Sidebar({ current, onNavigate }: SidebarProps) {

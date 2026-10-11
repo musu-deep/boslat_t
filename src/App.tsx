@@ -19,7 +19,7 @@ function App() {
     friday: 'غروب الجمعة',
     topics: 'مقترحات الوكلاء',
     social: 'سوشال مونتيور',
-    analytics: 'التحليلات',
+    analytics: 'الأداء والتقارير',
   };
 
   return (

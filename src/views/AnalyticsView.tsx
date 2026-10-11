@@ -55,7 +55,7 @@ export function AnalyticsView() {
     <div className="space-y-6 animate-fadeIn">
       <div>
         <h2 className="text-2xl font-bold text-navy-800 font-display flex items-center gap-2">
-          <BarChart3 className="w-7 h-7 text-navy-500" /> التحليلات والأداء
+          <BarChart3 className="w-7 h-7 text-navy-500" /> الأداء والتقارير
         </h2>
         <p className="text-sm text-slate-400 mt-1">قياس أثر الإضاءات الاستراتيجية</p>
       </div>

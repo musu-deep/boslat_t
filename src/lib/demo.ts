@@ -3,7 +3,7 @@ type Tables = { agents: Agent; tasks: Task; content: Content; friday_posts: Frid
 type Database = { [K in keyof Tables]: Tables[K][] };
 const storageKey = 'alboslah.demo.v1';
 const created_at = '2026-10-11T09:00:00.000Z';
-const agents: Agent[] = ['المستكتب','الناشر','المتابع','السوشال ميديا','المبتكر'].map((name,i) => ({ id: `demo-agent-${i}`, name, role: ['كاتب','ناشر','متابع','سوشال','مبتكر'][i], description: ['استكتاب المحتوى الاستراتيجي','تجهيز المحتوى للنشر','متابعة الأداء والتفاعل','إدارة حسابات التواصل','ابتكار المواضيع'][i], status: 'idle', avatar_color: i % 2 ? '#c5a55a' : '#1a3a5c', current_task: null, performance_score: 0, tasks_completed: 0, created_at }));
+const agents: Agent[] = ['وكيل إعداد المحتوى','وكيل النشر','وكيل تحليل الأداء','وكيل إدارة التواصل الاجتماعي','وكيل تطوير الموضوعات'].map((name,i) => ({ id: `demo-agent-${i}`, name, role: ['إعداد المحتوى','النشر','تحليل الأداء','إدارة التواصل الاجتماعي','تطوير الموضوعات'][i], description: ['إعداد المحتوى الاستراتيجي','تجهيز المحتوى للنشر','تحليل الأداء والتفاعل','إدارة حسابات التواصل الاجتماعي','تطوير الموضوعات'][i], status: 'idle', avatar_color: i % 2 ? '#c5a55a' : '#1a3a5c', current_task: null, performance_score: 0, tasks_completed: 0, created_at }));
 const initial: Database = {
  agents,
  tasks: [{id:'demo-task',title:'مراجعة مسودة تجريبية',description:'مهمة للتعرف على دورة إعداد المحتوى',agent_id:agents[0].id,status:'pending',priority:'medium',due_date:null,content_id:null,completed_at:null,created_at}],
@@ -19,6 +19,15 @@ function load(): Database {
  if (!raw) return structuredClone(initial);
  const value = JSON.parse(raw);
  if (!value || Object.keys(initial).some(key => !Array.isArray(value[key]))) throw new Error('تعذر قراءة البيانات المحلية');
+ let updated = false;
+ for (const row of value.agents as Agent[]) {
+  const current = agents.find(agent => agent.id === row.id);
+  if (current && (row.name !== current.name || row.role !== current.role || row.description !== current.description)) {
+   Object.assign(row, { name: current.name, role: current.role, description: current.description });
+   updated = true;
+  }
+ }
+ if (updated) save(value);
  return value;
 }
 function save(db: Database): void { localStorage.setItem(storageKey, JSON.stringify(db)); }

@@ -1,3 +1,4 @@
+import { AgentsHero } from '@/components/AgentsHero';
 import { useEffect, useState } from 'react';
 import { Users, FileText, CalendarHeart, Share2, TrendingUp, Activity, CheckCircle2, Clock, ArrowUpRight, Sparkles, Zap, Compass } from 'lucide-react';
 import { Card, Badge, Spinner } from '@/components/ui';
@@ -67,32 +68,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-l from-navy-800 via-navy-700 to-navy-600 p-8 text-white shadow-xl shadow-navy-200">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-64 h-64 bg-gold-400 rounded-full -translate-x-32 -translate-y-32 animate-float" />
-          <div className="absolute bottom-0 left-20 w-40 h-40 bg-gold-400 rounded-full translate-y-20 animate-float" style={{ animationDelay: '1s' }} />
-        </div>
-        <div className="relative">
-          <div className="flex items-center gap-2 mb-2">
-            <Compass className="w-5 h-5 text-gold-400" />
-            <span className="text-sm text-gold-300">إضاءات استراتيجية نحو التغيير</span>
-          </div>
-          <h2 className="text-3xl font-bold font-display mb-2">أهلاً بك، د. علي العتيبي</h2>
-          <p className="text-navy-200/80 max-w-lg">
-            نظام الوكلاء الأذكياء يعمل على أتم وجه. تابع أداء الفريق في مسيرة الإصلاح والنهضة.
-          </p>
-          {upcomingFriday && (
-            <div className="mt-4 inline-flex items-center gap-2 bg-gold-500/15 backdrop-blur-sm rounded-xl px-4 py-2 border border-gold-500/20">
-              <CalendarHeart className="w-4 h-4 text-gold-400" />
-              <span className="text-sm text-gold-200">بوست الجمعة القادم جاهز للمراجعة</span>
-              <button onClick={() => onNavigate('friday')} className="text-gold-400 hover:text-gold-300 transition-colors">
-                <ArrowUpRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+      <AgentsHero onNavigate={onNavigate} hasFridayDraft={Boolean(upcomingFriday)} />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

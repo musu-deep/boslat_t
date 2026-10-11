@@ -25,15 +25,11 @@ export function Sidebar({ current, onNavigate }: SidebarProps) {
         <img
           src={`${import.meta.env.BASE_URL}images/alboslah-logo.png`}
           alt="شعار البوصلة"
-          className="block w-full h-auto mb-2"
+          className="block w-full h-auto"
           style={{ filter: 'drop-shadow(0 0 1px rgba(255,255,255,0.9)) drop-shadow(0 0 6px rgba(66,190,203,0.55))' }}
           width="2048"
           height="1056"
         />
-        <div>
-          <h1 className="text-xl font-bold text-white font-display">البوصلة</h1>
-          <p className="text-xs text-gold-300/80">إضاءات استراتيجية نحو التغيير</p>
-        </div>
       </div>
 
       {/* Dr. Name */}

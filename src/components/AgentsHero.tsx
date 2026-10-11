@@ -28,7 +28,6 @@ export function AgentsHero({ onNavigate, hasFridayDraft }: AgentsHeroProps) {
           {hasFridayDraft && <button className="agents-hero-friday" onClick={() => onNavigate('friday')}><CalendarHeart size={16} /><span>غروب الجمعة — مراجعة المسودة</span><ArrowUpRight size={15} /></button>}
         </div>
       </div>
-      <div className="agents-hero-caption" aria-hidden="true">الثبات · البساطة · العمق · بعد الأثر</div>
     </section>
   );
 }

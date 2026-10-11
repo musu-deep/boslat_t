@@ -1,4 +1,3 @@
-import { isDemoMode } from '@/lib/supabase';
 import { useState } from 'react';
 import { Sidebar, type ViewKey } from '@/components/Sidebar';
 import { Dashboard } from '@/views/Dashboard';
@@ -35,10 +34,6 @@ function App() {
               <p className="text-xs text-slate-400">منصة البوصلة | إضاءات استراتيجية نحو التغيير</p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="hidden md:flex items-center gap-2 text-xs text-slate-400">
-                <span className="w-2 h-2 rounded-full bg-gold-400 animate-pulse-soft" />
-                <span>{isDemoMode ? 'نسخة تجريبية' : 'متصل'}</span>
-              </div>
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-navy-700 to-navy-900 flex items-center justify-center text-gold-400 font-bold text-sm shadow-md ring-1 ring-gold-500/20">
                 ع
               </div>
@@ -46,9 +41,6 @@ function App() {
           </div>
         </header>
 
-        {isDemoMode && <div className="mx-8 mt-5 rounded-xl border border-gold-200 bg-gold-50 px-5 py-3 text-sm text-navy-800" role="status">
-          وضع تجريبي — البيانات محفوظة في هذا المتصفح. الوكلاء والنشر والإحصاءات محاكاة للتجربة، ولا يتم إرسال المحتوى إلى أي منصة.
-        </div>}
         {/* Content */}
         <div className="p-8 max-w-7xl mx-auto">
           {view === 'dashboard' && <Dashboard onNavigate={setView} />}

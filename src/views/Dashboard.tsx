@@ -1,10 +1,12 @@
+import { fetchSignals } from '@/lib/monitor';
+import type { MonitorSignal } from '@/types/monitor';
 import { AgentsHero } from '@/components/AgentsHero';
 import { useEffect, useState } from 'react';
 import { Users, FileText, CalendarHeart, Share2, TrendingUp, Activity, CheckCircle2, Clock, ArrowUpRight, Sparkles, Zap, Compass } from 'lucide-react';
 import { Card, Badge, Spinner } from '@/components/ui';
-import { fetchAgents, fetchTasks, fetchContent, fetchSocialPosts, fetchFridayPosts } from '@/lib/api';
+import { fetchAgents, fetchTasks, fetchContent, fetchFridayPosts } from '@/lib/api';
 import { statusLabels, statusColors, timeAgo, priorityColors, priorityLabels } from '@/lib/utils';
-import type { Agent, Task, Content, SocialPost, FridayPost } from '@/types';
+import type { Agent, Task, Content, FridayPost } from '@/types';
 import type { ViewKey } from '@/components/Sidebar';
 
 interface DashboardProps {
@@ -15,7 +17,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [content, setContent] = useState<Content[]>([]);
-  const [socialPosts, setSocialPosts] = useState<SocialPost[]>([]);
+  const [signals, setSignals] = useState<MonitorSignal[]>([]);
   const [fridayPosts, setFridayPosts] = useState<FridayPost[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,13 +28,13 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           fetchAgents(),
           fetchTasks(),
           fetchContent(),
-          fetchSocialPosts(),
+          fetchSignals(),
           fetchFridayPosts(),
         ]);
         setAgents(a);
         setTasks(t);
         setContent(c);
-        setSocialPosts(s);
+        setSignals(s);
         setFridayPosts(f);
       } catch (err) {
         console.error('Dashboard load error:', err);
@@ -53,14 +55,14 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const workingAgents = agents.filter((a) => a.status === 'working').length;
   const pendingTasks = tasks.filter((t) => t.status === 'pending' || t.status === 'in_progress').length;
   const publishedContent = content.filter((c) => c.status === 'published').length;
-  const totalEngagement = socialPosts.reduce((sum, s) => sum + s.likes + s.comments + s.shares, 0);
+  const totalSignals = signals.length;
   const upcomingFriday = fridayPosts.find((f) => f.status === 'draft' || f.status === 'scheduled');
 
   const stats = [
     { label: 'الوكلاء النشطون', value: `${workingAgents}/${agents.length}`, icon: Users, trend: '+2' },
     { label: 'مهام قيد التنفيذ', value: pendingTasks, icon: Activity, trend: '+5' },
     { label: 'محتوى منشور', value: publishedContent, icon: FileText, trend: '+12' },
-    { label: 'إجمالي التفاعل', value: totalEngagement.toLocaleString('ar-SA'), icon: TrendingUp, trend: '+18%' },
+    { label: 'إشارات مرصودة', value: totalSignals.toLocaleString('ar-SA'), icon: TrendingUp, trend: 'إدخال يدوي' },
   ];
 
   const recentTasks = tasks.slice(0, 5);
@@ -84,7 +86,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                   <div className="flex items-center gap-1 mt-2">
                     <TrendingUp className="w-3.5 h-3.5 text-gold-500" />
                     <span className="text-xs text-gold-700 font-medium">{stat.trend}</span>
-                    <span className="text-xs text-slate-400">عن الأسبوع الماضي</span>
+                    {i !== 3 && <span className="text-xs text-slate-400">عن الأسبوع الماضي</span>}
                   </div>
                 </div>
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${
@@ -192,26 +194,26 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <h3 className="font-bold text-navy-800 font-display mb-4">إجراءات سريعة</h3>
             <div className="space-y-2">
               <QuickAction icon={CalendarHeart} label="تجهيز غروب الجمعة" color="bg-gold-50 text-gold-700" onClick={() => onNavigate('friday')} />
-              <QuickAction icon={FileText} label="تكليف جديد جديد" color="bg-navy-50 text-navy-600" onClick={() => onNavigate('content')} />
-              <QuickAction icon={Share2} label="جدولة منشور سوشال" color="bg-navy-50 text-navy-600" onClick={() => onNavigate('social')} />
-              <QuickAction icon={Zap} label="مقترح جديد جديد" color="bg-gold-50 text-gold-700" onClick={() => onNavigate('topics')} />
+              <QuickAction icon={FileText} label="تكليف جديد" color="bg-navy-50 text-navy-600" onClick={() => onNavigate('content')} />
+              <QuickAction icon={Share2} label="رصد إشارة" color="bg-navy-50 text-navy-600" onClick={() => onNavigate('social')} />
+              <QuickAction icon={Zap} label="مقترح جديد" color="bg-gold-50 text-gold-700" onClick={() => onNavigate('topics')} />
             </div>
           </Card>
 
           <Card className="p-5 bg-gradient-to-br from-navy-50 to-white border-navy-100">
             <div className="flex items-center gap-2 mb-3">
               <Sparkles className="w-4 h-4 text-gold-500" />
-              <h3 className="font-bold text-navy-800 font-display text-sm">آخر التحديثات</h3>
+              <h3 className="font-bold text-navy-800 font-display text-sm">آخر الإشارات</h3>
             </div>
             <div className="space-y-3">
-              {socialPosts.slice(0, 3).map((post) => (
+              {signals.slice(0, 3).map((post) => (
                 <div key={post.id} className="flex items-center gap-2 text-sm">
                   <div className="w-2 h-2 rounded-full bg-gold-400" />
-                  <span className="text-slate-600 truncate flex-1">{post.content?.slice(0, 40) ?? 'منشور'}...</span>
-                  <span className="text-xs text-slate-400">{post.likes} إعجاب</span>
+                  <span className="text-slate-600 truncate flex-1">{post.excerpt.slice(0, 40)}...</span>
+                  <span className="text-xs text-slate-400">أولوية {post.priority}</span>
                 </div>
               ))}
-              {socialPosts.length === 0 && <p className="text-sm text-slate-400">لا توجد تحديثات</p>}
+              {signals.length === 0 && <p className="text-sm text-slate-400">لا توجد إشارات مرصودة</p>}
             </div>
           </Card>
         </div>
@@ -234,4 +236,5 @@ function QuickAction({ icon: Icon, label, color, onClick }: { icon: typeof Users
     </button>
   );
 }
+
 

@@ -1,158 +1,42 @@
 import { useEffect, useState } from 'react';
-import { Plus, Share2, Trash2, Edit3, Heart, MessageCircle, Repeat2, Calendar, Send } from 'lucide-react';
+import { Plus, Radar, ArrowUpRight, MessageCircle, ExternalLink, FileDown } from 'lucide-react';
 import { Card, Badge, Button, Modal, Input, Spinner, EmptyState } from '@/components/ui';
-import { fetchSocialPosts, fetchAgents, createSocialPost, updateSocialPost, deleteSocialPost } from '@/lib/api';
-import { statusLabels, statusColors, platformLabels, platformColors, formatDateTime } from '@/lib/utils';
-import type { SocialPost, Agent } from '@/types';
-
-export function SocialView() {
-  const [posts, setPosts] = useState<SocialPost[]>([]);
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState<SocialPost | null>(null);
-  const [filterPlatform, setFilterPlatform] = useState('all');
-
-  const [form, setForm] = useState({ platform: 'twitter', content: '', status: 'draft', scheduled_at: '', agent_id: '' });
-
-  useEffect(() => { loadData(); }, []);
-
-  async function loadData() {
-    try { const [s, a] = await Promise.all([fetchSocialPosts(), fetchAgents()]); setPosts(s); setAgents(a); }
-    catch (err) { console.error('Social posts load error:', err); }
-    finally { setLoading(false); }
-  }
-
-  function openCreate() {
-    setEditing(null);
-    setForm({ platform: 'twitter', content: '', status: 'draft', scheduled_at: '', agent_id: agents[0]?.id ?? '' });
-    setShowModal(true);
-  }
-
-  function openEdit(post: SocialPost) {
-    setEditing(post);
-    setForm({ platform: post.platform, content: post.content ?? '', status: post.status, scheduled_at: post.scheduled_at ?? '', agent_id: post.agent_id ?? '' });
-    setShowModal(true);
-  }
-
-  async function handleSave() {
-    if (!form.content.trim()) return;
-    const data = { platform: form.platform, content: form.content, status: form.status, scheduled_at: form.scheduled_at ? new Date(form.scheduled_at).toISOString() : null, agent_id: form.agent_id || null };
-    try {
-      if (editing) { await updateSocialPost(editing.id, data); } else { await createSocialPost(data); }
-      setShowModal(false); await loadData();
-    } catch (err) { console.error('Save social post error:', err); }
-  }
-
-  async function handleDelete(id: string) {
-    try { await deleteSocialPost(id); setPosts(posts.filter((p) => p.id !== id)); }
-    catch (err) { console.error('Delete social post error:', err); }
-  }
-
-  const filtered = filterPlatform === 'all' ? posts : posts.filter((p) => p.platform === filterPlatform);
-  const agentMap = new Map(agents.map((a) => [a.id, a]));
-
-  const platformStats = ['twitter', 'instagram', 'facebook', 'telegram', 'whatsapp'].map((p) => ({
-    platform: p,
-    count: posts.filter((post) => post.platform === p).length,
-    engagement: posts.filter((post) => post.platform === p).reduce((sum, post) => sum + post.likes + post.comments + post.shares, 0),
-  }));
-
-  if (loading) { return (<div className="flex items-center justify-center h-96"><Spinner size="lg" /></div>); }
-
-  return (
-    <div className="space-y-6 animate-fadeIn">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-navy-800 font-display flex items-center gap-2">
-            <Share2 className="w-7 h-7 text-navy-500" /> سوشال مونتيور
-          </h2>
-          <p className="text-sm text-slate-400 mt-1">حضور رقمي ثابت وبسيط وعميق</p>
-        </div>
-        <Button variant="gold" onClick={openCreate}><Plus className="w-4 h-4" /> منشور جديد</Button>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {platformStats.map((stat) => (
-          <Card key={stat.platform} className={`p-4 cursor-pointer transition-all ${filterPlatform === stat.platform ? 'ring-2 ring-gold-300' : ''}`} onClick={() => setFilterPlatform(filterPlatform === stat.platform ? 'all' : stat.platform)}>
-            <Badge label={platformLabels[stat.platform] ?? stat.platform} colorClass={platformColors[stat.platform] ?? ''} />
-            <p className="text-2xl font-bold text-navy-800 mt-2 font-display">{stat.count}</p>
-            <p className="text-xs text-slate-400">{stat.engagement.toLocaleString('ar-SA')} تفاعل</p>
-          </Card>
-        ))}
-      </div>
-
-      {filtered.length === 0 ? (
-        <EmptyState icon={<Share2 className="w-16 h-16" />} title="لا توجد منشورات" description="ابدأ بإنشاء أول منشور للسوشال ميديا"
-          action={<Button variant="gold" onClick={openCreate}><Plus className="w-4 h-4" /> إنشاء منشور</Button>} />
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filtered.map((post) => {
-            const agent = post.agent_id ? agentMap.get(post.agent_id) : null;
-            return (
-              <Card key={post.id} className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Badge label={platformLabels[post.platform] ?? post.platform} colorClass={platformColors[post.platform] ?? ''} />
-                    <Badge label={statusLabels[post.status] ?? post.status} colorClass={statusColors[post.status] ?? ''} />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => openEdit(post)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-navy-600 transition-colors"><Edit3 className="w-4 h-4" /></button>
-                    <button onClick={() => handleDelete(post.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
-                  </div>
-                </div>
-                <div className="bg-slate-50 rounded-xl p-3 mb-3">
-                  <p className="text-sm text-navy-700 line-clamp-4 whitespace-pre-wrap">{post.content ?? 'لا يوجد محتوى'}</p>
-                </div>
-                {post.status === 'published' && (
-                  <div className="flex items-center gap-4 mb-3 text-xs">
-                    <span className="flex items-center gap-1 text-slate-500"><Heart className="w-3.5 h-3.5 text-gold-500" />{post.likes.toLocaleString('ar-SA')}</span>
-                    <span className="flex items-center gap-1 text-slate-500"><MessageCircle className="w-3.5 h-3.5 text-navy-400" />{post.comments.toLocaleString('ar-SA')}</span>
-                    <span className="flex items-center gap-1 text-slate-500"><Repeat2 className="w-3.5 h-3.5 text-navy-400" />{post.shares.toLocaleString('ar-SA')}</span>
-                  </div>
-                )}
-                <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                  <div className="flex items-center gap-2 text-xs text-slate-400">
-                    {agent && (
-                      <span className="flex items-center gap-1">
-                        <span className="w-4 h-4 rounded flex items-center justify-center text-white text-[10px] font-bold"
-                          style={{ backgroundColor: agent.avatar_color === '#c5a55a' ? '#c5a55a' : '#1a3a5c' }}>
-                          {agent.name.charAt(0)}
-                        </span>
-                        {agent.name}
-                      </span>
-                    )}
-                    {post.scheduled_at && <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{formatDateTime(post.scheduled_at)}</span>}
-                  </div>
-                  {post.status === 'scheduled' && <Button size="sm" variant="secondary"><Send className="w-3.5 h-3.5" /> نشر الآن</Button>}
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'تعديل المنشور' : 'منشور جديد'} size="md">
-        <div className="space-y-4">
-          <Input label="المنصة" value={form.platform} onChange={(v) => setForm({ ...form, platform: v })} type="select" options={[
-            { value: 'twitter', label: 'تويتر' }, { value: 'instagram', label: 'إنستغرام' }, { value: 'facebook', label: 'فيسبوك' }, { value: 'telegram', label: 'تيليغرام' }, { value: 'whatsapp', label: 'واتساب' }, { value: 'youtube', label: 'يوتيوب' },
-          ]} />
-          <Input label="المحتوى" value={form.content} onChange={(v) => setForm({ ...form, content: v })} placeholder="اكتب المنشور..." type="textarea" rows={5} />
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="الحالة" value={form.status} onChange={(v) => setForm({ ...form, status: v })} type="select" options={[
-              { value: 'draft', label: 'مسودة' }, { value: 'scheduled', label: 'مجدول' }, { value: 'published', label: 'منشور' },
-            ]} />
-            <Input label="الوكيل المسؤول" value={form.agent_id} onChange={(v) => setForm({ ...form, agent_id: v })} type="select" options={[
-              { value: '', label: 'بدون' }, ...agents.map((a) => ({ value: a.id, label: a.name })),
-            ]} />
-          </div>
-          {form.status === 'scheduled' && <Input label="وقت النشر المجدول" value={form.scheduled_at} onChange={(v) => setForm({ ...form, scheduled_at: v })} type="date" />}
-          <div className="flex gap-2 justify-end pt-2">
-            <Button variant="ghost" onClick={() => setShowModal(false)}>إلغاء</Button>
-            <Button variant="gold" onClick={handleSave}>{editing ? 'حفظ التغييرات' : 'إنشاء'}</Button>
-          </div>
-        </div>
-      </Modal>
-    </div>
-  );
+import { fetchSignals, createSignal, updateSignal, convertSignal, safeSourceUrl } from '@/lib/monitor';
+import { formatDateTime, platformLabels } from '@/lib/utils';
+import type { MonitorSignal } from '@/types/monitor';
+const categories=[{value:'mention',label:'ذكر البوصلة'},{value:'question',label:'سؤال يحتاج معالجة'},{value:'comment',label:'تعليق'},{value:'trend',label:'موضوع متداول'},{value:'impact',label:'أثر المحتوى'}];
+const states:Record<string,string>={new:'بانتظار المراجعة',reviewed:'تمت المراجعة',converted:'تحولت إلى مقترح',dismissed:'مستبعدة'};
+const blank={platform:'twitter',source_note:'',source_url:'',excerpt:'',category:'mention',priority:'5'};
+const emptyProposal={title:'',goal:'',audience:'',reason:''};
+export function SocialView(){
+ const [signals,setSignals]=useState<MonitorSignal[]>([]),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('');
+ const [show,setShow]=useState(false),[editing,setEditing]=useState<MonitorSignal|null>(null),[form,setForm]=useState(blank),[filter,setFilter]=useState('all');
+ const [selected,setSelected]=useState<MonitorSignal|null>(null),[proposal,setProposal]=useState(emptyProposal),[replying,setReplying]=useState<MonitorSignal|null>(null),[reply,setReply]=useState('');
+ async function load(){try{setSignals(await fetchSignals());}catch(e){setError(e instanceof Error?e.message:'تعذر تحميل الإشارات');}finally{setLoading(false);}}
+ useEffect(()=>{void load();},[]);
+ function open(signal?:MonitorSignal){setEditing(signal??null);setForm(signal?{platform:signal.platform,source_note:signal.source_note,source_url:signal.source_url??'',excerpt:signal.excerpt,category:signal.category,priority:String(signal.priority)}:blank);setError('');setShow(true);}
+ async function save(){setError('');if(!form.source_note.trim()||!form.excerpt.trim()){setError('حدد المصدر وأدخل نص الإشارة');return;}setBusy(true);try{const data={platform:form.platform,source_note:form.source_note.trim(),source_url:safeSourceUrl(form.source_url),excerpt:form.excerpt.trim(),category:form.category,priority:Math.max(1,Math.min(10,Number(form.priority)||5))};if(editing)await updateSignal(editing.id,data);else await createSignal(data);setShow(false);await load();}catch(e){setError(e instanceof Error?e.message:'تعذر حفظ الإشارة');}finally{setBusy(false);}}
+ async function status(signal:MonitorSignal,value:string){setBusy(true);setError('');try{await updateSignal(signal.id,{status:value});await load();}catch{setError('تعذر تعديل الحالة');}finally{setBusy(false);}}
+ async function convert(){if(!selected)return;setBusy(true);setError('');try{await convertSignal(selected.id,proposal.title,proposal.goal,proposal.audience,proposal.reason);setSelected(null);await load();setMessage('أضيف المقترح مع مرجع الإشارة إلى «مقترحات الوكلاء». راجعه واعتمده ثم كلف الوكيل.');}catch(e){setError(e instanceof Error?e.message:'تعذر إنشاء المقترح');}finally{setBusy(false);}}
+ async function saveReply(approve:boolean){if(!replying||!reply.trim()){setError('أدخل نص الرد أولًا');return;}setBusy(true);setError('');try{await updateSignal(replying.id,{response_body:reply.trim(),response_status:approve?'approved':'draft',status:replying.proposed_topic_id?'converted':approve?'reviewed':replying.status});setReplying(null);await load();setMessage(approve?'تم اعتماد الرد للنسخ والإرسال يدويًا؛ لم يُرسل تلقائيًا.':'تم حفظ مسودة الرد.');}catch{setError('تعذر حفظ الرد');}finally{setBusy(false);}}
+ async function copy(signal:MonitorSignal){try{await navigator.clipboard.writeText(signal.response_body??'');setMessage('تم نسخ الرد المعتمد؛ لم يُرسل تلقائيًا.');}catch{setError('تعذر النسخ. يمكنك فتح الرد ونسخ نصه يدويًا.');}}
+ const active=signals.filter(s=>s.status==='new');
+ function report(){const counts=categories.map(c=>`${c.label}: ${signals.filter(s=>s.category===c.value).length}`).join('\n');const platforms=[...new Set(signals.map(s=>s.platform))].map(p=>`${platformLabels[p]??p}: ${signals.filter(s=>s.platform===p).length}`).join('\n');const text=`سوشال مونتيور — تقرير الإشارات المدخلة يدويًا\n${new Date().toLocaleString('ar-SA')}\n\nالإجمالي: ${signals.length}\nبانتظار المراجعة: ${active.length}\nتحولت إلى مقترحات: ${signals.filter(s=>!!s.proposed_topic_id).length}\n\nحسب التصنيف\n${counts}\n\nحسب المنصة\n${platforms}\n\nأولوية المراجعة\n${[...active].sort((a,b)=>b.priority-a.priority).slice(0,10).map(s=>`• ${s.excerpt}\nالمصدر: ${s.source_note}\n${s.source_url??''}`).join('\n\n')}\n\nهذا التقرير يلخص الإشارات المدخلة ولا يمثل قياس وصول أو تفاعل آلي.`;const url=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='social-monitor-report.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+ if(loading)return <div className="flex justify-center py-24"><Spinner size="lg"/></div>;
+ return <div className="space-y-6">
+  <div className="flex justify-between gap-3 flex-wrap"><div><h2 className="text-2xl font-bold font-display text-navy-800 flex items-center gap-2"><Radar/>سوشال مونتيور</h2><p className="text-sm text-slate-500 mt-2">رصد الإشارات والأسئلة والتعليقات وتحويل ما يستحق المعالجة إلى عمل للوكلاء.</p></div><div className="flex gap-2"><Button variant="secondary" onClick={report}><FileDown size={16}/>تقرير الرصد</Button><Button variant="gold" onClick={()=>open()}><Plus size={16}/>إضافة إشارة</Button></div></div>
+  <p className="rounded-xl bg-gold-50 border border-gold-200 p-4 text-sm text-navy-700">الرصد حاليًا بإدخال يدوي. لا تُقرأ حسابات التواصل أو تُرسل الردود تلقائيًا. المسار: إشارة ← مقترح وكيل ← اعتماد ← تكليف ← مراجعة المخرج.</p>
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{[['إشارات مرصودة',signals.length],['بانتظار المراجعة',active.length],['مقترحات مرتبطة',signals.filter(s=>s.proposed_topic_id).length],['ردود معتمدة',signals.filter(s=>s.response_status==='approved').length]].map(([label,count])=><Card key={label} className="p-4"><p className="text-2xl font-bold text-navy-800">{count}</p><p className="text-xs text-slate-500">{label}</p></Card>)}</div>
+  {message&&<p role="status" className="rounded-xl bg-navy-50 p-3 text-sm text-navy-700">{message}</p>}{error&&<p role="alert" className="text-red-700 text-sm">{error}</p>}
+  <div className="flex gap-2 flex-wrap" role="group" aria-label="تصفية الإشارات">{[['all','جميع الإشارات'],...Object.entries(states)].map(([key,label])=><Button key={key} size="sm" variant={filter===key?'primary':'secondary'} onClick={()=>setFilter(key)}>{label}</Button>)}<Button size="sm" variant={filter==='priority'?'primary':'secondary'} onClick={()=>setFilter('priority')}>أولوية عالية</Button></div>
+  {!signals.length?<EmptyState icon={<Radar size={48}/>} title="لا توجد إشارات مرصودة" description="أضف ذكرًا للبوصلة أو سؤالًا أو تعليقًا مع مصدره لبدء المراجعة"/>:<div className="grid md:grid-cols-2 gap-4">{signals.filter(s=>filter==='all'||filter==='priority'&&s.priority>=8||s.status===filter).map(signal=><Card key={signal.id} className="p-5 space-y-4">
+   <div className="flex justify-between gap-3 flex-wrap"><div className="flex gap-2"><Badge label={platformLabels[signal.platform]??signal.platform}/><Badge label={categories.find(c=>c.value===signal.category)?.label??signal.category}/></div><Badge label={states[signal.status]??signal.status}/></div>
+   <p className="text-sm text-navy-800 whitespace-pre-wrap leading-relaxed">{signal.excerpt}</p><div className="text-xs text-slate-500 space-y-2"><p>المصدر: {signal.source_note} · أولوية {signal.priority}</p><p>{formatDateTime(signal.created_at)}</p>{signal.source_url&&<a href={signal.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex gap-1 items-center text-navy-700 underline">فتح المصدر<ExternalLink size={12}/></a>}</div>
+   <div className="flex gap-2 flex-wrap">{!signal.proposed_topic_id&&signal.status!=='dismissed'&&<Button size="sm" variant="gold" disabled={busy} onClick={()=>{setSelected(signal);setProposal({...emptyProposal,title:signal.excerpt.slice(0,70)});setError('');}}><ArrowUpRight size={14}/>تحويل إلى مقترح وكيل</Button>}{!signal.proposed_topic_id&&<Button size="sm" variant="secondary" disabled={busy} onClick={()=>open(signal)}>تعديل الإشارة</Button>}{signal.status==='new'&&<><Button size="sm" variant="secondary" disabled={busy} onClick={()=>status(signal,'reviewed')}>تمت المراجعة</Button><Button size="sm" variant="ghost" disabled={busy} onClick={()=>status(signal,'dismissed')}>استبعاد</Button></>}{signal.status==='dismissed'&&<Button size="sm" disabled={busy} onClick={()=>status(signal,'new')}>إعادة للمراجعة</Button>}<Button size="sm" variant="secondary" onClick={()=>{setReplying(signal);setReply(signal.response_body??'');setError('');}}><MessageCircle size={14}/>{signal.response_body?'مراجعة الرد':'إعداد رد'}</Button>{signal.response_status==='approved'&&<Button size="sm" variant="ghost" onClick={()=>copy(signal)}>نسخ الرد المعتمد</Button>}</div>
+   {signal.proposed_topic_id&&<p className="text-xs text-navy-600">مرتبطة بمقترح في «مقترحات الوكلاء»؛ لا يُنشأ مقترح مكرر من الإشارة نفسها.</p>}
+  </Card>)}</div>}
+  <Modal open={show} onClose={()=>setShow(false)} title={editing?'تعديل الإشارة':'إضافة إشارة مرصودة'} size="lg"><div className="space-y-4"><Input label="المنصة" value={form.platform} onChange={platform=>setForm({...form,platform})} type="select" options={['twitter','instagram','facebook','telegram','whatsapp','other'].map(p=>({value:p,label:platformLabels[p]??'مصدر آخر'}))}/><Input label="اسم المصدر أو الحساب" value={form.source_note} onChange={source_note=>setForm({...form,source_note})}/><Input label="رابط المصدر (اختياري)" value={form.source_url} onChange={source_url=>setForm({...form,source_url})}/><Input label="نص الإشارة أو السؤال أو التعليق" value={form.excerpt} onChange={excerpt=>setForm({...form,excerpt})} type="textarea" rows={5}/><div className="grid grid-cols-2 gap-4"><Input label="التصنيف" value={form.category} onChange={category=>setForm({...form,category})} type="select" options={categories}/><Input label="الأولوية (1–10)" value={form.priority} onChange={priority=>setForm({...form,priority})} type="number"/></div>{error&&<p role="alert" className="text-red-700">{error}</p>}<Button disabled={busy} variant="gold" onClick={save}>حفظ الإشارة</Button></div></Modal>
+  <Modal open={!!selected} onClose={()=>setSelected(null)} title="تحويل الإشارة إلى مقترح وكيل" size="lg"><div className="space-y-4"><p className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">{selected?.excerpt}</p><Input label="عنوان المقترح" value={proposal.title} onChange={title=>setProposal({...proposal,title})}/><Input label="الهدف" value={proposal.goal} onChange={goal=>setProposal({...proposal,goal})} type="textarea"/><Input label="الجمهور المقصود" value={proposal.audience} onChange={audience=>setProposal({...proposal,audience})}/><Input label="سبب أهمية معالجة الإشارة" value={proposal.reason} onChange={reason=>setProposal({...proposal,reason})} type="textarea"/><p className="text-xs text-slate-500">ينتقل نص الإشارة ومرجع المصدر إلى المقترح تلقائيًا، ويظل بانتظار الاعتماد.</p>{error&&<p role="alert" className="text-red-700">{error}</p>}<Button disabled={busy} variant="gold" onClick={convert}>إنشاء المقترح المرتبط</Button></div></Modal>
+  <Modal open={!!replying} onClose={()=>setReplying(null)} title="إعداد ومراجعة الرد" size="lg"><div className="space-y-4"><p className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">{replying?.excerpt}</p><Input label="نص الرد" value={reply} onChange={setReply} type="textarea" rows={6}/><p className="text-xs text-slate-500">إدخال ومراجعة يدوية في النسخة التجريبية؛ الاعتماد يتيح النسخ فقط ولا يرسل الرد.</p>{error&&<p role="alert" className="text-red-700">{error}</p>}<div className="flex gap-2"><Button disabled={busy||!reply.trim()} variant="secondary" onClick={()=>saveReply(false)}>حفظ مسودة</Button><Button disabled={busy||!reply.trim()} variant="gold" onClick={()=>saveReply(true)}>اعتماد الرد للنسخ</Button></div></div></Modal>
+ </div>;
 }

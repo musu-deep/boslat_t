@@ -65,7 +65,7 @@ export function SocialView() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-navy-800 font-display flex items-center gap-2">
-            <Share2 className="w-7 h-7 text-navy-500" /> السوشال ميديا
+            <Share2 className="w-7 h-7 text-navy-500" /> سوشال مونتيور
           </h2>
           <p className="text-sm text-slate-400 mt-1">حضور رقمي ثابت وبسيط وعميق</p>
         </div>

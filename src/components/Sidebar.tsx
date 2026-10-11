@@ -13,7 +13,7 @@ const navItems: { key: ViewKey; label: string; icon: typeof Compass }[] = [
   { key: 'content', label: 'مهام إعداد المحتوى', icon: FileText },
   { key: 'friday', label: 'غروب الجمعة', icon: CalendarHeart },
   { key: 'topics', label: 'مقترحات الوكلاء', icon: Lightbulb },
-  { key: 'social', label: 'السوشال ميديا', icon: Share2 },
+  { key: 'social', label: 'سوشال مونتيور', icon: Share2 },
   { key: 'analytics', label: 'التحليلات', icon: BarChart3 },
 ];
 

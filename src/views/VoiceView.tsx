@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Mic, Square, ArrowLeft, Volume2, VolumeX } from 'lucide-react';
-import { Card, Button, Input } from '@/components/ui';
+import './VoiceView.css';
+import { Mic, Square, ArrowLeft, Volume2, VolumeX, Sparkles, Clock3, ClipboardCheck, FilePlus2, Compass, Activity, Send } from 'lucide-react';
+import { Button } from '@/components/ui';
 import { fetchTasks, fetchContent } from '@/lib/api';
 import { parseVoiceCommand, type VoiceIntent } from '@/lib/voice';
 import type { Task } from '@/types';
@@ -42,16 +43,37 @@ export function VoiceView({onNavigate,onPrepare}:{onNavigate:(view:ViewKey,taskI
   try{r.start();setListening(true);}catch{setError('تعذر بدء الاستماع. حاول مجددًا.');}
  }
  const examples=['وش المهام المتأخرة؟','اعرض المخرجات اللي تحتاج مراجعتي','لخّص آخر مستجدات المنصة','كلّف وكيل إعداد المحتوى بموضوع عن التخطيط الاستراتيجي','افتح سوشال مونتيور'];
- return <div className="space-y-6">
-  <div><h2 className="text-2xl font-bold font-display text-navy-800">وكيل الأوامر الصوتية</h2><p className="text-sm text-slate-500 mt-2">استعلم عن المهام، انتقل بين الأقسام، وجهّز تكليفًا بصوتك.</p></div>
-  <Card className="p-6 space-y-5">
-   <div className="flex items-center gap-4"><button disabled={busy} aria-label={listening?'إيقاف الاستماع':'بدء الاستماع'} onClick={()=>listening?recognition.current?.stop():start()} className={'w-16 h-16 shrink-0 rounded-full flex items-center justify-center text-white shadow-lg '+(listening?'bg-red-600 animate-pulse':'bg-navy-800 hover:bg-navy-700')}>{listening?<Square size={24}/>:<Mic size={28}/>}</button><div><h3 className="font-bold text-navy-800">{listening?'أستمع إليك…':'اضغط وتحدث بالعربية'}</h3><p className="text-xs text-slate-500 mt-1">الاستماع يبدأ بطلبك ويتوقف بانتهاء الأمر أو عند مغادرة الصفحة.</p></div></div>
-   <p className="text-xs text-slate-500">قد يستخدم المتصفح خدمة خارجية لتحويل الصوت إلى نص. المنصة لا تحفظ تسجيلًا صوتيًا. {Speech?'':'يمكنك استخدام الأوامر المكتوبة في هذا المتصفح.'}</p>
-   <Input label="الأمر الملتقط — يمكنك تعديله أو كتابته" value={text} onChange={value=>{request.current++;setText(value);setIntent(null);setMessage('');setTasks([]);setBusy(false);}} type="textarea" rows={3}/>
-   <Button disabled={busy||listening||!text.trim()} onClick={()=>void interpret(text)} variant="gold">{busy?'جارٍ قراءة البيانات…':'تنفيذ الاستعلام أو تجهيز الإجراء'}</Button>
-   {error&&<p role="alert" className="text-sm text-red-600">{error}</p>}
-  </Card>
-  {message&&<Card className="p-5 space-y-4"><p role="status" className="text-navy-800 leading-relaxed">{message}</p><div className="flex gap-2 flex-wrap">{intent?.kind==='create'&&<Button variant="gold" onClick={()=>onPrepare(intent.title,text)}>مراجعة التكليف قبل الإنشاء<ArrowLeft size={15}/></Button>}{'speechSynthesis' in window&&<><Button size="sm" variant="secondary" onClick={()=>{window.speechSynthesis.cancel();const speech=new SpeechSynthesisUtterance(message);speech.lang='ar-SA';window.speechSynthesis.speak(speech);}}><Volume2 size={15}/>قراءة النتيجة</Button><Button size="sm" variant="ghost" onClick={()=>window.speechSynthesis.cancel()}><VolumeX size={15}/>إيقاف القراءة</Button></>}</div>{tasks.map(task=><button key={task.id} onClick={()=>onNavigate('content',task.id)} className="flex items-center justify-between gap-3 w-full text-right rounded-xl border border-slate-200 p-4 text-sm text-navy-700 hover:bg-slate-50"><span>{task.title}</span><ArrowLeft size={15}/></button>)}</Card>}
-  <Card className="p-5"><h3 className="font-bold text-navy-800 mb-3">أوامر يمكنك تجربتها</h3><div className="flex flex-wrap gap-2">{examples.map(example=><button key={example} disabled={busy||listening} onClick={()=>{setText(example);void interpret(example);}} className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-sm text-navy-700 hover:border-gold-400">{example}</button>)}</div><p className="text-xs text-slate-400 mt-4">هذه النسخة تدعم الأوامر المحددة أعلاه. تجهيز التكليف لا ينشئه؛ يلزم مراجعته وتأكيده في النموذج.</p></Card>
+ const icons=[Clock3,ClipboardCheck,Activity,FilePlus2,Compass];
+ const labels=['متابعة المواعيد','مراجعة المخرجات','مستجدات المنصة','تكليف جديد','التنقل بين الأقسام'];
+ return <div className="voice-workspace">
+  <div className="voice-heading"><div><span className="voice-eyebrow"><Sparkles size={14}/>إدارة المنصة بالصوت</span><h2>وكيل الأوامر الصوتية</h2><p>طلب واحد يوصلك إلى المهام والمخرجات والإجراء التالي.</p></div><span className={'voice-status '+(listening?'is-live':'')}><i/>{listening?'الاستماع نشط':busy?'معالجة الطلب':'جاهز لطلبك'}</span></div>
+  <div className="voice-layout">
+   <section className="voice-console" aria-label="مساحة الأوامر الصوتية">
+    <div className={'voice-stage '+(listening?'is-listening':'')}>
+     <span className="voice-stage-label"><Mic size={14}/>العربية</span>
+     <div className="voice-orbit">
+      <div className="voice-orbit-ring"/><div className="voice-orbit-ring second"/>
+      <button disabled={busy} aria-label={listening?'إيقاف الاستماع':'بدء الاستماع'} onClick={()=>listening?recognition.current?.stop():start()} className="voice-mic">{listening?<Square size={28}/>:<Mic size={36}/>}</button>
+     </div>
+     <h3>{listening?'أستمع إليك…':busy?'أراجع طلبك…':'ماذا تريد أن تنجز؟'}</h3>
+     <p>{listening?'تحدث بوضوح، ثم انتظر ظهور النص أدناه.':'اضغط الميكروفون واطلب، أو اكتب أمرك مباشرة.'}</p>
+     <div className="voice-wave" aria-hidden="true">{[12,22,36,18,44,28,52,28,44,18,36,22,12].map((height,i)=><span key={i} style={{height,animationDelay:i*0.08+'s'}}/>)}</div>
+     <span className="voice-stage-note">{listening?'اضغط مرة أخرى لإيقاف الاستماع':'الميكروفون متوقف حتى تبدأ الاستماع'}</span>
+    </div>
+    <div className="voice-composer">
+     <div className="voice-composer-label"><label htmlFor="voice-command">نص الأمر</label><span>راجع النص أو عدّله قبل المتابعة</span></div>
+     <textarea id="voice-command" value={text} disabled={listening} onChange={e=>{request.current++;setText(e.target.value);setIntent(null);setMessage('');setTasks([]);setBusy(false);}} placeholder="مثال: اعرض المخرجات التي تحتاج مراجعتي…" rows={3}/>
+     <div className="voice-composer-footer"><span>{Speech?'الصوت والكتابة متاحان':'استخدم الكتابة — الصوت غير متاح في هذا المتصفح'}</span><button className="voice-submit" disabled={busy||listening||!text.trim()} onClick={()=>void interpret(text)}>{busy?'جارٍ المعالجة':'متابعة الطلب'}<Send size={15}/></button></div>
+     {error&&<p role="alert" className="voice-error">{error}</p>}
+    </div>
+   </section>
+   <aside className="voice-shortcuts">
+    <div className="voice-shortcuts-heading"><span className="voice-eyebrow">ابدأ بطلب جاهز</span><h3>أوامر سريعة</h3><p>اختر أمرًا لتجربته مباشرة.</p></div>
+    <div className="voice-example-list">{examples.map((example,i)=>{const Icon=icons[i];return <button key={example} disabled={busy||listening} onClick={()=>{setText(example);void interpret(example);}}><span className="voice-example-icon"><Icon size={19}/></span><span><strong>{labels[i]}</strong><small>{example}</small></span><ArrowLeft size={15} className="voice-example-arrow"/></button>;})}</div>
+    <div className="voice-review-note"><ClipboardCheck size={18}/><p><strong>القرار يبقى لك</strong>التكليف يُجهّز للمراجعة، ولا يُنشأ إلا بعد تأكيده في النموذج.</p></div>
+   </aside>
+  </div>
+  {(message||busy)&&<section className="voice-result" aria-label="نتيجة الطلب"><div className="voice-result-heading"><span><Sparkles size={17}/>{busy?'جارٍ قراءة بيانات المنصة':'نتيجة الطلب'}</span><small>{intent?.kind==='create'?'بانتظار مراجعتك':'من بيانات المنصة الحالية'}</small></div>{message&&<><p role="status" className="voice-result-text">{message}</p><div className="flex gap-2 flex-wrap">{intent?.kind==='create'&&<Button variant="gold" onClick={()=>onPrepare(intent.title,text)}>مراجعة التكليف قبل الإنشاء<ArrowLeft size={15}/></Button>}{'speechSynthesis' in window&&<><Button size="sm" variant="secondary" onClick={()=>{window.speechSynthesis.cancel();const speech=new SpeechSynthesisUtterance(message);speech.lang='ar-SA';window.speechSynthesis.speak(speech);}}><Volume2 size={15}/>قراءة النتيجة</Button><Button size="sm" variant="ghost" onClick={()=>window.speechSynthesis.cancel()}><VolumeX size={15}/>إيقاف القراءة</Button></>}</div><div className="voice-task-list">{tasks.map(task=><button key={task.id} onClick={()=>onNavigate('content',task.id)}><span>{task.title}</span><ArrowLeft size={15}/></button>)}</div></>}</section>}
+  <details className="voice-details"><summary>عن الصوت والأوامر المدعومة</summary><p>قد يستخدم المتصفح خدمة خارجية لتحويل الصوت إلى نص. المنصة لا تحفظ تسجيلًا صوتيًا، ويتوقف الاستماع عند انتهاء الأمر أو مغادرة الصفحة. تدعم هذه النسخة الأوامر المحددة في الأمثلة؛ ويمكن كتابة الأمر عند تعذر استخدام الصوت.</p></details>
  </div>;
 }

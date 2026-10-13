@@ -24,6 +24,7 @@ jobs:
       - run: npm run build
         env:
           VITE_DEMO_MODE: 'true'
+          VITE_FRIDAY_API_URL: ${{ vars.VITE_FRIDAY_API_URL }}
           BASE_PATH: /boslat_t/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

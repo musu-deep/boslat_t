@@ -10,7 +10,26 @@ const blank={title:'',main_topic:'',content:'',verse:'',hadith:'',wisdom:'',sche
 export function FridayView(){
  const [posts,setPosts]=useState<FridayPost[]>([]),[agents,setAgents]=useState<Agent[]>([]),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [editing,setEditing]=useState<string|null>(null),[form,setForm]=useState(blank),[tab,setTab]=useState<'edit'|'preview'>('edit'),[connection,setConnection]=useState(false),[deleting,setDeleting]=useState<FridayPost|null>(null);
- const [audience,setAudience]=useState('قراء البوصلة'),[length,setLength]=useState('مكثف — 30 إلى 60 …1350 tokens truncated…u062aمة التقرير في سطر مستقل بعد سطر «إنه». جملة «بين» في سطر مستقل. الدلالة الختامية في سطر مستقل بعدها. الدعاء ثابت حرفيًا. حوّل المسافات في وسم الموضوع إلى شرطة سفلية. اختر تركيبًا مناسبًا للضمير المذكر بعد «إنه».',
+ const [audience,setAudience]=useState('قراء البوصلة'),[length,setLength]=useState('مكثف — 30 إلى 60 كلمة'),[instructions,setInstructions]=useState(''),[reference,setReference]=useState('');
+ async function load(){try{const [p,a]=await Promise.all([fetchFridayPosts(),fetchAgents()]);setPosts(p);setAgents(a);}catch{setError('تعذر تحميل الإصدارات السابقة. حاول تحديث الصفحة.');}finally{setLoading(false);}}
+ useEffect(()=>{void load();},[]);
+ const [endpoint,setEndpoint]=useState(()=>localStorage.getItem('friday-api-url')||import.meta.env.VITE_FRIDAY_API_URL||''),[accessToken,setAccessToken]=useState(''),[generating,setGenerating]=useState(false);
+ const configured=!!endpoint.trim()&&!!accessToken.trim();
+ const existing=posts.find(p=>p.id===editing);
+ const approved=existing?.status==='approved';
+ const set=(key:keyof typeof blank,value:string)=>{setForm(previous=>({...previous,[key]:value}));setNotice('');};
+ const text=[form.title,form.content,form.verse?'الآية: '+form.verse:'',form.hadith?'الحديث: '+form.hadith:'',form.wisdom?'حكمة: '+form.wisdom:''].filter(Boolean).join('\n\n');
+ const words=form.content.trim()?form.content.trim().split(/\s+/).length:0;
+ const source=posts.find(p=>p.id===reference);
+ const prompt=[
+  'أنت وكيل صياغة «غروب الجمعة» في البوصلة. انطلق من كلمة واحدة أو فكرة أو نص مرجعي لبناء تأمل مترابط قابل للنشر.',
+  'البذرة الدلالية: '+form.main_topic.trim(),
+  'العنوان: '+(form.title.trim()||'استخرج مصدرًا مفردًا معرّفًا بـ«الـ» من جوهر التأمل؛ لا يلزم تكرار كلمة المدخل'),
+  'الجمهور: '+audience,
+  'الطول: '+length,
+  'مسار التفكير: استكشف داخليًا ثلاثة مسارات: تجربة الإنسان، الفعل والاختيار، والأثر في الآخرين أو الزمن. اختر مسارًا واحدًا. استخرج منه معنى محوريًا ثم حركة للمعنى (انتقال أو تحول أو كشف أو استعادة)، ثم ثنائية مترابطة، ثم دلالة ختامية ناتجة عنها. لا تعرض خطوات التفكير.',
+  'أخرج النص فقط بهذا النسق وبفواصل الأسطر نفسها:\n{العنوان}\nإنه {تقرير الفكرة المحورية}\n{تتمة التقرير وتعميقه}.\nبين {الحالة الأولى} و{الحالة الثانية}،\n{حركة المعنى}.\n{الدلالة الختامية}.\n\nاللهم استعملنا في رضاك\n\n#غروب_الجمعة #البوصلة #د_علي_العتيبي #{الموضوع}',
+  'قواعد إلزامية: تتمة التقرير في سطر مستقل بعد سطر «إنه». جملة «بين» في سطر مستقل. الدلالة الختامية في سطر مستقل بعدها. الدعاء ثابت حرفيًا. حوّل المسافات في وسم الموضوع إلى شرطة سفلية. اختر تركيبًا مناسبًا للضمير المذكر بعد «إنه».',
   'كل سطر يخدم المعنى نفسه. الثنائية لا يشترط أن تكون تضادًا؛ الخاتمة تنشأ منها ولا تكون حكمة منفصلة. تجنب الحشو والوعظ المباشر والزخرفة المتكلفة. لا تضف مقدمة أو شرحًا أو تنسيق Markdown.',
   'راجع الترابط وفواصل الأسطر والدعاء والوسوم قبل إخراج النص. لا تختلق اقتباسات أو آيات أو أحاديث أو نسبتها. النص المعاد صياغته مستخلص وليس اقتباسًا حرفيًا. هذه مسودة للمراجعة وليست نصًا معتمدًا من د. علي العتيبي.',
   instructions.trim()?'توجيه إضافي ضمن النسق المعتمد: '+instructions.trim():'',
